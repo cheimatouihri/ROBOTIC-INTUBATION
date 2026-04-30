@@ -5,7 +5,7 @@
 ```bash
 git clone https://github.com/yucongzh/Laryngoscopic-Image-Segmentation-Toolkit.git
 ```
-## Run setup script to download model weights and install dependencies automatically
+### Run setup script to download model weights and install dependencies automatically
 
 ```bash
 python setup_toolkit.py
@@ -16,6 +16,8 @@ python setup_toolkit.py
 ```bash 
 python preprocess_laryngoscopy.py
 ```
+Frames are saved to `dataset/frames/<video_id>/`.
+
 ### Run glottis segmentation
  
 On a single video:
