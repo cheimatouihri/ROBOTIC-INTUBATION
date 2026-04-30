@@ -28,7 +28,22 @@ def visualize(video_id: str, frame: str):
     original = plt.imread(str(original_path))
     mask     = plt.imread(str(mask_path))
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    # Resize mask to match original if needed
+    if original.shape[:2] != mask.shape[:2]:
+        from skimage.transform import resize
+        mask = resize(mask, original.shape[:2], anti_aliasing=True)
+
+    # Build transparent overlay: colorize each class, apply alpha
+    overlay = np.zeros((*original.shape[:2], 4), dtype=np.float32)  # RGBA
+    mask_f  = mask[:, :, :3] if mask.ndim == 3 else mask
+
+    unet_pixels = (mask_f[:,:,0] > 0.5) & (mask_f[:,:,1] < 0.3)   # red
+    sam_pixels  = (mask_f[:,:,1] > 0.5) & (mask_f[:,:,0] < 0.3)   # green
+
+    overlay[unet_pixels] = [1, 0, 0, 0.5]   # red, 50% transparent
+    overlay[sam_pixels]  = [0, 1, 0, 0.5]   # green, 50% transparent
+
+    fig, axes = plt.subplots(1, 3, figsize=(17, 5))
     fig.suptitle(f"{video_id} — frame {frame}", fontsize=13)
 
     axes[0].imshow(original)
@@ -39,13 +54,18 @@ def visualize(video_id: str, frame: str):
     axes[1].set_title("Segmentation mask")
     axes[1].axis("off")
 
+    axes[2].imshow(original)
+    axes[2].imshow(overlay)
+    axes[2].set_title("Overlay")
+    axes[2].axis("off")
+
     # Legend
     legend = [
         mpatches.Patch(color=(1, 0, 0), label="UNet — glottis"),
         mpatches.Patch(color=(0, 1, 0), label="SAM — glottis"),
         mpatches.Patch(color=(0, 0, 0), label="Background"),
     ]
-    axes[1].legend(handles=legend, loc="lower right", fontsize=9,
+    axes[2].legend(handles=legend, loc="lower right", fontsize=9,
                    framealpha=0.8, facecolor="white")
 
     plt.tight_layout()
