@@ -1,26 +1,5 @@
 """
-Videolaryngoscopy Preprocessing Pipeline
-=========================================
-Apple Silicon (M1/M2/M3/M4) · VideoToolbox HW acceleration
-
-Extracts and filters frames from .mp4 videos ready for SAM 2 segmentation.
-
-Filters applied:
-  1. Dark frames      (lens cap, scope not inserted)
-  2. Overexposed      (lens flare)
-  3. Blur             (threshold 1.5 for endoscopic cameras)
-  4. Near-duplicates  (static scope)
-
-Output structure:
-    dataset/
-    ├── frames/
-    │   └── video_001/       ← clean frames named 000001.jpg, 000002.jpg ...
-    ├── rejected/
-    │   └── video_001/
-    ├── logs/
-    │   ├── per_video_stats.json
-    │   └── pipeline_run_*.log
-    └── manifest.csv         ← frame_path, video_id, label (blank)
+Laryngoscopy Video Preprocessing Pipeline
 
 Usage:
     python preprocess_laryngoscopy.py --video_dir data/videos --output_dir dataset
