@@ -105,7 +105,9 @@ UNet was trained on the BAGLS dataset (59,250 laryngoscopy frames). SAM is a gen
 ### Annotation
  
 1. Export frames to [Roboflow](https://roboflow.com) — project type: **Keypoint Detection**
+
 2. Annotate with 3 keypoints per class:
+
 | Class | Keypoints |
 |-------|-----------|
 | glottis | centroid, anterior commissure, posterior commissure |
