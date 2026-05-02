@@ -97,3 +97,67 @@ UNet was trained on the BAGLS dataset (59,250 laryngoscopy frames). SAM is a gen
 | `run_segmentation.py` | Run glottis segmentation | `python run_segmentation.py --video_id 250120_LAU-0003 --gpu -1` |
 | `visualize_mask.py` | View original + mask + overlay | `python visualize_mask.py --video_id 250120_LAU-0003 --frame 000066` |
 | `run_random_sample.py` | Segment & visualize 5 random frames | `python run_random_sample.py --gpu -1` |
+
+---
+
+## Current state 
+
+### Annotation
+ 
+1. Export frames to [Roboflow](https://roboflow.com) — project type: **Keypoint Detection**
+2. Annotate with 3 keypoints per class:
+| Class | Keypoints |
+|-------|-----------|
+| glottis | centroid, anterior commissure, posterior commissure |
+| epiglottis | tip, left, right |
+| tube | tip, mid, base |
+ 
+3. Export dataset as **COCO** format → download zip → place in `annotation/`
+---
+ 
+### Training
+ 
+**`coco_to_yolo_pose.py`** — Convert Roboflow COCO export to YOLOv8 pose format
+```bash
+python coco_to_yolo_pose.py
+```
+Run this once after downloading from Roboflow. Creates `annotation/train/labels/` and `annotation/data_fixed.yaml`.
+ 
+**`train_yolo_pose.py`** — Train YOLOv8-pose model
+```bash
+# First run
+python train_yolo_pose.py --model yolov8n-pose.pt --epochs 100 
+```
+Best weights saved to `runs/pose/train/weights/best.pt` and copied to `best.pt`.
+ 
+ 
+---
+ 
+### Evaluation & Visualization
+ 
+**`stitch_yolo_results.py`** — Run YOLO on a full video and visualize predictions
+```bash
+# Side-by-side video (original vs predictions)
+python stitch_yolo_results.py --video_id 250402_LAU-0280 --mode video --fps 10
+# decrease fps for slower video
+
+# Grid overview
+python stitch_yolo_results.py --video_id 250402_LAU-0280 --mode grid --every_n 10
+ 
+# All videos
+python stitch_yolo_results.py --all --mode video
+ 
+```
+Output: `yolo_output/<video_id>/<video_id>_yolo.mp4`
+ 
+**Quick single frame test:**
+```bash
+python -c "
+from ultralytics import YOLO
+model = YOLO('runs/pose/train/weights/best.pt')
+results = model('dataset/frames/<video_id>/<frame>.jpg', conf=0.3)
+results[0].save('test_prediction.png')
+"
+open test_prediction.png
+```
+ 
