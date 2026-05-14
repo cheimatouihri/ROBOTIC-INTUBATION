@@ -1,4 +1,21 @@
 
+``` 
+PROJECT/
+├── scripts/
+│   ├── preprocessing/
+│   ├── segmentation_toolkit/
+|   ├── visualizations/
+│   └── yolo/
+├── checkpoints/          ← trained YOLO weights (gitignored)
+│   └── runs/pose/train/weights/best.pt
+├── results/     
+├── annotation/           ← gitignored
+├── dataset/              ← gitignored
+├── realtime_guidance.py
+└── README.md
+```
+## en train de modifier la description en dessous
+
 ## STEPS
 ### Clone the segmentation toolkit
 
@@ -162,4 +179,4 @@ results[0].save('test_prediction.png')
 "
 open test_prediction.png
 ```
- 
+
