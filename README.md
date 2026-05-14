@@ -21,16 +21,14 @@ PROJECT/
 
 ## Environment Setup
  
-### 1. Clone the repo
-
-### 2. Create conda environment (Python 3.11 required)
+### Create conda environment (Python 3.11 required)
 ```bash
 conda create -n robotic-intubation python=3.11
 conda activate robotic-intubation
 pip install -r requirements.txt
 ```
  
-### 3. Add dataset
+### Dataset
 ```
 dataset/videos/<video_id>.mp4
 dataset/frames/<video_id>/*.jpg
