@@ -6,11 +6,14 @@ PROJECT/
 │   ├── segmentation_toolkit/
 |   ├── visualizations/
 │   └── yolo/
-├── checkpoints/          ← trained YOLO weights (gitignored)
-│   └── runs/pose/train/weights/best.pt
+├── checkpoints/                    ← trained YOLO weights (gitignored)
+│   |── pose/train/weights/best.pt
+|   └── Laryngoscopic-Image-Segmentation-Toolkit/Toolkit
 ├── results/     
-├── annotation/           ← gitignored
-├── dataset/              ← gitignored
+├── annotation/ (from roboflow)     ← gitignored
+├── dataset/                        ← gitignored
+|   ├── videos                    
+|   └── frames                   
 ├── realtime_guidance.py
 └── README.md
 ```
