@@ -1,2 +1,25 @@
+# Dataset & annotations
 dataset/
 data/
+annotation/
+
+# Model weights & checkpoints
+checkpoints/
+*.pt
+*.pth
+*.dict
+
+# Results
+results/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Mac
+.DS_Store
+
+# Logs
+*.log

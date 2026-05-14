@@ -14,52 +14,19 @@ Usage:
 """
 
 import os
-import sys
 import shutil
 import argparse
 import subprocess
 from pathlib import Path
-import subprocess
+
 import sys
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config import DATASET_DIR, CHECKPOINT_DIR
 
-REQUIRED_PACKAGES = [
-    "gitpython",
-    "matplotlib",
-    "numpy",
-    "opencv-python",
-    "pillow",
-    "psutil",
-    "PyYAML",
-    "requests",
-    "scipy",
-    "thop",
-    "torch",
-    "torchvision",
-    "tqdm",
-    "ultralytics",
-    "pandas",
-    "seaborn",
-    "packaging",
-    "setuptools",
-    "urllib3",
-    "segment-anything",
-]
-
-def install_requirements():
-    print("Checking dependencies...")
-    for package in REQUIRED_PACKAGES:
-        try:
-            __import__(package.replace("-", "_").split("[")[0])
-        except ImportError:
-            print(f"  Installing {package}...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package, "-q"])
-    print("✓ All dependencies satisfied\n")
-
-PROJECT_ROOT = Path(__file__).parent.resolve()
-TOOLKIT_DIR  = PROJECT_ROOT / "Laryngoscopic-Image-Segmentation-Toolkit" / "Toolkit"
-DATA_DIR     = PROJECT_ROOT / "Laryngoscopic-Image-Segmentation-Toolkit" / "data"
+TOOLKIT_DIR  = CHECKPOINT_DIR / "Laryngoscopic-Image-Segmentation-Toolkit" / "Toolkit"
+DATA_DIR     = CHECKPOINT_DIR / "Laryngoscopic-Image-Segmentation-Toolkit" / "data"
 OUTPUT_DIR   = TOOLKIT_DIR / "output"
-FRAMES_DIR   = PROJECT_ROOT / "dataset" / "frames"
+FRAMES_DIR   = DATASET_DIR / "frames"
 
 
 def verify_setup():
@@ -153,7 +120,7 @@ def process_video(video_id: str, max_frames: int = None, gpu: str = "0", frame_f
 
 
 def main():
-    install_requirements()
+    
     p = argparse.ArgumentParser(description="Run glottis segmentation on frames")
     p.add_argument("--video_id",   help="Single video ID e.g. 250120_LAU-0003")
     p.add_argument("--all",        action="store_true", help="Process all videos")

@@ -17,6 +17,11 @@ PROJECT/
 ├── realtime_guidance.py
 └── README.md
 ```
+
+```
+pip install -r requirements.txt
+```
+
 ## en train de modifier la description en dessous
 
 ## STEPS

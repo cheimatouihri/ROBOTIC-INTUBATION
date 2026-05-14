@@ -18,10 +18,12 @@ import argparse
 from pathlib import Path
 from ultralytics import YOLO
 
-PROJECT_ROOT  = Path(__file__).parent.resolve()
-FRAMES_DIR    = PROJECT_ROOT / "dataset" / "frames"
-MODEL_PATH    = PROJECT_ROOT / "runs" / "pose" / "train" / "weights" / "best.pt"
-OUTPUT_DIR    = PROJECT_ROOT / "yolo_output"
+import sys
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config import DATASET_DIR, RESULTS_DIR , MODEL_PATH , CONF_THRESHOLD
+
+FRAMES_DIR    = DATASET_DIR / "frames"
+OUTPUT_DIR    = RESULTS_DIR / "stitched_yolo"
 
 # Colors per class (BGR)
 CLASS_COLORS = {
@@ -37,7 +39,21 @@ KPT_COLORS = [
     (255, 255, 255),   # white
 ]
 
-CONF_THRESHOLD = 0.3
+def keep_best_per_class(result):
+    """Keep only the highest confidence detection per class."""
+    if result.boxes is None or len(result.boxes) == 0:
+        return result
+    best = {}
+    for i, box in enumerate(result.boxes):
+        cls_id = int(box.cls[0])
+        conf   = float(box.conf[0])
+        if cls_id not in best or conf > best[cls_id][1]:
+            best[cls_id] = (i, conf)
+    keep = [v[0] for v in best.values()]
+    result.boxes = result.boxes[keep]
+    if result.keypoints is not None:
+        result.keypoints = result.keypoints[keep]
+    return result
 
 def draw_predictions(frame: np.ndarray, result, class_names: list) -> np.ndarray:
     """Draw bounding boxes, labels, confidence and keypoints on frame."""
@@ -116,14 +132,11 @@ def mode_video(video_id: str, model: YOLO, class_names: list, fps: float = 10.0)
         print(f"  No frames found in {frames_dir}")
         return
 
-    out_dir = OUTPUT_DIR / video_id
-    out_dir.mkdir(parents=True, exist_ok=True)
-
     # Get frame size
     sample = cv2.imread(str(frame_files[0]))
     h, w   = sample.shape[:2]
 
-    out_path = out_dir / f"{video_id}_yolo.mp4"
+    out_path = OUTPUT_DIR / f"{video_id}_yolo.mp4"
     writer   = cv2.VideoWriter(
         str(out_path),
         cv2.VideoWriter_fourcc(*"mp4v"),
@@ -134,7 +147,8 @@ def mode_video(video_id: str, model: YOLO, class_names: list, fps: float = 10.0)
     for i, fp in enumerate(frame_files):
         frame   = cv2.imread(str(fp))
         results = model(str(fp), conf=CONF_THRESHOLD, verbose=False)
-        pred    = draw_predictions(frame, results[0], class_names)
+        results = keep_best_per_class(results[0])
+        pred    = draw_predictions(frame, results, class_names)
         combined = make_side_by_side(frame, pred, fp.name)
         writer.write(combined)
 
@@ -153,9 +167,6 @@ def mode_grid(video_id: str, model: YOLO, class_names: list,
     if not frame_files:
         print(f"  No frames found")
         return
-
-    out_dir = OUTPUT_DIR / video_id
-    out_dir.mkdir(parents=True, exist_ok=True)
 
     cell_w, cell_h = 320, 240
     cells = []
@@ -185,7 +196,7 @@ def mode_grid(video_id: str, model: YOLO, class_names: list,
                 (10, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 1)
     grid = np.vstack([title, grid])
 
-    out_path = out_dir / f"{video_id}_grid.jpg"
+    out_path = OUTPUT_DIR / f"{video_id}_grid.jpg"
     cv2.imwrite(str(out_path), grid, [cv2.IMWRITE_JPEG_QUALITY, 90])
     print(f"  ✓ Grid saved → {out_path}")
 
@@ -203,8 +214,6 @@ def main():
     p.add_argument("--conf",     type=float, default=0.3)
     args = p.parse_args()
 
-    global CONF_THRESHOLD
-    CONF_THRESHOLD = args.conf
 
     print(f"Loading model from {args.model}...")
     model       = YOLO(args.model)

@@ -19,18 +19,21 @@ from pathlib import Path
 from dataclasses import dataclass
 from datetime import datetime
 
+import sys
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config import PROJECT_ROOT
+
 @dataclass
 class Config:
-    # ── Paths ──────────────────────────────────────────────────────────────
-    video_dir:  str = "./videos"
-    output_dir: str = "./dataset"
 
-    # ── Frame extraction ───────────────────────────────────────────────────
+    video_dir:  str = str(PROJECT_ROOT / "dataset" / "videos")
+    output_dir: str = str(PROJECT_ROOT / "dataset")
+
     fps: float = 5.0
     # At 30fps source → fps=5 keeps 1 in 6 frames
     # Recommended range: 3–10 fps
 
-    # ── Quality filters ────────────────────────────────────────────────────
+    # Quality filters 
     blur_threshold: float = 1.5
     # Endoscopic cameras score 2–5 on sharp frames.
     # 1.5 catches only truly unusable frames.
@@ -38,15 +41,13 @@ class Config:
     min_brightness: float = 25.0
     max_brightness: float = 230.0
 
-    # ── Near-duplicate removal ─────────────────────────────────────────────
+    # Near-duplicate removal
     hash_diff_threshold: int = 6
     # 0 = disabled
 
-    # ── Output ─────────────────────────────────────────────────────────────
     image_quality: int = 92
     resize_width:  int = 640   # 0 = keep original
 
-    # ── Hardware ───────────────────────────────────────────────────────────
     use_hw_accel: bool = True
     hw_backend: str = "videotoolbox"
     # macOS (Apple Silicon + Intel) : "videotoolbox"

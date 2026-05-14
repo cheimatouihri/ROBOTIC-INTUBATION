@@ -1,14 +1,11 @@
 """
 Convert COCO keypoint annotations to YOLOv8 pose format.
 
-Usage:
-    python coco_to_yolo_pose.py
-
 Output structure:
     annotation/
         train/
-            images/      ← already exists
-            labels/      ← created by this script (YOLOv8 pose format)
+            images/     
+            labels/    (created by this script in YOLOv8 pose format)
         valid/
             images/
             labels/
@@ -17,10 +14,9 @@ Output structure:
 import json
 import yaml
 from pathlib import Path
-
-PROJECT_ROOT   = Path(__file__).parent.resolve()
-ANNOTATION_DIR = PROJECT_ROOT / "annotation"
-
+import sys
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config import PROJECT_ROOT, ANNOTATION_DIR , CLASSES, KPT_SHAPE
 
 def convert_split(split: str):
     split_dir = ANNOTATION_DIR / split
@@ -53,11 +49,10 @@ def convert_split(split: str):
     )
 
     # Class list excluding 'nose' and parent class 'RoboticIntubation'
-    EXCLUDE = {"nose", "RoboticIntubation"}
     class_names = [
         cat["name"]
         for cat in sorted(data["categories"], key=lambda x: x["id"])
-        if cat["name"] not in EXCLUDE
+        if cat["name"] in CLASSES
     ]
     class_to_idx = {name: i for i, name in enumerate(class_names)}
     print(f"  Classes: {class_names}")
@@ -113,6 +108,15 @@ def convert_split(split: str):
         if lines:
             (labels_dir / f"{stem}.txt").write_text("\n".join(lines))
             converted += 1
+            
+    # Move images into images/ subfolder
+    images_dir = split_dir / "images"
+    images_dir.mkdir(exist_ok=True)
+    for img in split_dir.glob("*.jpg"):
+        img.rename(images_dir / img.name)
+    for img in split_dir.glob("*.png"):
+        img.rename(images_dir / img.name)
+    print(f"  ✓ Images moved to {images_dir}")
 
     print(f"  ✓ {converted} label files written to {labels_dir}")
     return class_names, max_kpts
@@ -121,11 +125,11 @@ def convert_split(split: str):
 def update_data_yaml(class_names, max_kpts):
     out_path = ANNOTATION_DIR / "data_fixed.yaml"
     data = {
-        "train":     str(ANNOTATION_DIR / "train" / "images"),
-        "val":       str(ANNOTATION_DIR / "valid" / "images"),
+        "train": str(ANNOTATION_DIR / "train" / "images"),
+        "val":   str(ANNOTATION_DIR / "valid" / "images"),
         "nc":        len(class_names),
         "names":     class_names,
-        "kpt_shape": [max_kpts, 3],
+        "kpt_shape": KPT_SHAPE,
     }
     with open(out_path, "w") as f:
         yaml.dump(data, f, default_flow_style=False)

@@ -1,21 +1,22 @@
 """
-Usage:
-    python run_random_sample.py
-    python run_random_sample.py --n 10 --gpu -1
+Script to visualize random segmentation samples in a grid format.
+
 """
 
 import argparse
 import random
 import subprocess
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).parent.resolve()
-FRAMES_DIR   = PROJECT_ROOT / "dataset" / "frames"
-OUTPUT_DIR   = PROJECT_ROOT / "Laryngoscopic-Image-Segmentation-Toolkit" / "Toolkit" / "output"
+import sys
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config import DATASET_DIR, RESULTS_DIR , PROJECT_ROOT
+
+FRAMES_DIR   = DATASET_DIR / "frames"
+OUTPUT_DIR   = RESULTS_DIR / "grid_segmentation_samples"
 
 
 def pick_random_frames(n: int):

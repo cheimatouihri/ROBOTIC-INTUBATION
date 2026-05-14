@@ -11,11 +11,12 @@ import argparse
 import shutil
 import yaml
 from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config import PROJECT_ROOT, ANNOTATION_DIR, CHECKPOINT_DIR , GPU , EPOCHS, BATCH, IMGSZ, BASE_MODEL, CLASSES , KPT_SHAPE, EARLY_STOPPING 
 
-PROJECT_ROOT  = Path(__file__).parent.resolve()
-ANNOTATION_DIR = PROJECT_ROOT / "annotation"
-DATA_YAML     = ANNOTATION_DIR / "data.yaml"
-RUNS_DIR      = PROJECT_ROOT / "runs"
+DATA_YAML = ANNOTATION_DIR / "data.yaml"
+RUNS_DIR  = CHECKPOINT_DIR
 
 
 def split_dataset(val_ratio: float = 0.2):
@@ -71,18 +72,16 @@ def fix_data_yaml():
     with open(DATA_YAML, "r") as f:
         data = yaml.safe_load(f)
 
-    data["train"] = str(ANNOTATION_DIR / "train")
-    data["val"]   = str(ANNOTATION_DIR / "valid")
+    data["train"] = str(ANNOTATION_DIR / "train" / "images")
+    data["val"]   = str(ANNOTATION_DIR / "valid" / "images")
 
     if not (ANNOTATION_DIR / "test").exists():
         data.pop("test", None)
 
-    if "kpt_shape" not in data:
-        data["kpt_shape"] = [3, 3]
+    data["kpt_shape"] = KPT_SHAPE
 
-    EXCLUDE = {"nose", "RoboticIntubation"}
     if "names" in data:
-        data["names"] = [n for n in data["names"] if n not in EXCLUDE]
+        data["names"] = [n for n in data["names"] if n in CLASSES]
         data["nc"]    = len(data["names"])
         print(f"  Classes: {data['names']}")
 
@@ -128,17 +127,11 @@ def train(epochs: int, model_name: str, resume: bool, batch: int, imgsz: int):
         project=str(RUNS_DIR / "pose"),
         name="train",
         exist_ok=True,
-        patience=20,        # early stopping if no improvement for 20 epochs
+        patience=EARLY_STOPPING,    
         save=True,
         plots=True,
-        device="mps",       # Apple Silicon — change to 0 for NVIDIA GPU, cpu for CPU
+        device="mps" if GPU == -1 else str(GPU), 
     )
-
-    # Copy best weights to project root for easy access
-    best = RUNS_DIR / "pose" / "train" / "weights" / "best.pt"
-    if best.exists():
-        shutil.copy(best, PROJECT_ROOT / "best.pt")
-        print(f"\n✓ Best weights saved to: {PROJECT_ROOT / 'best.pt'}")
 
     print("\nTraining complete.")
     print(f"  Results saved to: {RUNS_DIR / 'pose' / 'train'}")
@@ -146,16 +139,11 @@ def train(epochs: int, model_name: str, resume: bool, batch: int, imgsz: int):
 
 def main():
     p = argparse.ArgumentParser(description="Train YOLOv8-pose for laryngoscopy guidance")
-    p.add_argument("--epochs", type=int, default=100,
-                   help="Number of training epochs (default: 100)")
-    p.add_argument("--model", default="yolo11n-pose.pt",
-                   help="Base model to train from (default: yolo11n-pose.pt)")
-    p.add_argument("--batch", type=int, default=16,
-                   help="Batch size (default: 16, reduce if OOM)")
-    p.add_argument("--imgsz", type=int, default=640,
-                   help="Image size (default: 640)")
-    p.add_argument("--resume", action="store_true",
-                   help="Resume from last checkpoint")
+    p.add_argument("--epochs", type=int,   default=EPOCHS,     help="Number of training epochs")
+    p.add_argument("--model",  default=BASE_MODEL,             help="Base model to train from")
+    p.add_argument("--batch",  type=int,   default=BATCH,      help="Batch size")
+    p.add_argument("--imgsz",  type=int,   default=IMGSZ,      help="Image size")
+    p.add_argument("--resume", action="store_true",            help="Resume from last checkpoint")
     args = p.parse_args()
 
     train(args.epochs, args.model, args.resume, args.batch, args.imgsz)

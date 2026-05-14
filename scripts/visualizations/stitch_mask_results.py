@@ -1,18 +1,18 @@
 """
-stitch_results.py — Stitch original frames with segmentation mask overlays
+stitch_mask_results.py — Stitch original frames with segmentation mask overlays
 
 Usage:
     # Create overview grid for one video
-    python stitch_results.py --video_id 250120_LAU-0003 --mode grid
+    python stitch_mask_results.py --video_id 250120_LAU-0003 --mode grid
 
     # Create overlay video
-    python stitch_results.py --video_id 250120_LAU-0003 --mode video
+    python stitch_mask_results.py --video_id 250120_LAU-0003 --mode video
 
     # Create side by side images
-    python stitch_results.py --video_id 250120_LAU-0003 --mode sidebyside
+    python stitch_mask_results.py --video_id 250120_LAU-0003 --mode sidebyside
 
     # Run on all videos
-    python stitch_results.py --all --mode video
+    python stitch_mask_results.py --all --mode video
 """
 
 import cv2
@@ -24,24 +24,17 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+import sys
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config import CHECKPOINT_DIR, DATASET_DIR, RESULTS_DIR
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  PATHS
-# ══════════════════════════════════════════════════════════════════════════════
-
-PROJECT_ROOT = Path(__file__).parent.resolve()
-FRAMES_DIR   = PROJECT_ROOT / "dataset" / "frames"
-MASKS_DIR    = PROJECT_ROOT / "Laryngoscopic-Image-Segmentation-Toolkit" / "Toolkit" / "output"
-STITCH_DIR   = PROJECT_ROOT / "stitch_output"
+FRAMES_DIR = DATASET_DIR / "frames"
+MASKS_DIR  = CHECKPOINT_DIR / "Laryngoscopic-Image-Segmentation-Toolkit" / "Toolkit" / "output"
+STITCH_DIR = RESULTS_DIR / "stitch_output"
 
 # Overlay colors (BGR)
 MASK_COLOR   = (0, 255, 0)     # green overlay for glottis/vocal folds
 OVERLAY_ALPHA = 0.4            # transparency of overlay
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  OVERLAY GENERATOR
-# ══════════════════════════════════════════════════════════════════════════════
 
 def is_glottis_detected(mask_bgr: np.ndarray) -> bool:
     """
@@ -178,10 +171,6 @@ def make_side_by_side(frame_bgr: np.ndarray, overlay: np.ndarray,
 
     return np.hstack([left, right])
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  MODES
-# ══════════════════════════════════════════════════════════════════════════════
 
 def mode_sidebyside(video_id: str, output_dir: Path):
     """Save one side-by-side image per frame."""
@@ -339,10 +328,6 @@ def mode_grid(video_id: str, output_dir: Path,
     print(f"  [{video_id}] Grid saved → {out_path}  ({len(cells)} frames shown)")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  STATS
-# ══════════════════════════════════════════════════════════════════════════════
-
 def print_stats(video_id: str):
     """Print segmentation coverage stats for a video."""
     frames_dir = FRAMES_DIR / video_id
@@ -355,10 +340,6 @@ def print_stats(video_id: str):
     print(f"  [{video_id}]  frames={total_frames}  masks={total_masks}  "
           f"coverage={coverage:.1f}%")
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  MAIN
-# ══════════════════════════════════════════════════════════════════════════════
 
 def main():
     p = argparse.ArgumentParser(description="Stitch segmentation results for inspection")
