@@ -1,3 +1,5 @@
+# Robotic intubation – predictive airway modeling and data-driven guidance
+This project focuses on the development of predictive airway analytics and morphological modeling to support robotic intubation, leveraging large datasets to improve anatomical understanding and real-time navigation during airway management.
 
 ``` 
 PROJECT/
